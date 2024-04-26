@@ -1,249 +1,73 @@
 <!DOCTYPE html>
 <html>
-<head> 
+<head>
+<title>확률 게임</title>
 <style>
-    #game-board {
-    width: 100%;
-    height: 100%;
-    background-color: #f2f2f2;
-    position: relative;
+    .container {
+        margin: 0 auto;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    }
+    h1 {
+    color: #333;
     }
 
-    .player {
-    width: 50px;
-    height: 50px;
-    background-color: aqua;
-    position: absolute;
-    }
-
-    .obstacle {
-    width: 50px;
-    height: 50px;
-    background-color: gray;
-    position: absolute;
-    }
-
-    .bullet {
-    width: 10px;
-    height: 10px;
-    background-color: red;
-    position: absolute;
-    }
-
-    #restart-button {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    button {
     padding: 10px 20px;
-    font-size: 16px;
-    background-color: green;
-    color: white;
+    margin-top: 20px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 16px;
     }
 </style>
-<script type="text/javascript">
-    var gridSize = 10; // 맵의 크기
-    var players = []; // 플레이어 배열
-    var obstacles = []; // 장애물 배열
-    var bullets = []; // 총알 배열
-    var bulletSpeed = 5; // 총알 속도
-    var gameOver = false; // 게임 종료 여부
-
-    document.onkeydown = function(e) {
-      e = e || window.event;
-      var player1 = players[0]; // 플레이어 1
-      var player2 = players[1]; // 플레이어 2
-
-      if (!gameOver) {
-        // 캐릭터 조작
-        if (e.keyCode == 87) { // W 키 (플레이어 1)
-          movePlayer(player1, 0, -1); // 위로 이동
-        }
-        else if (e.keyCode == 83) { // S 키 (플레이어 1)
-          movePlayer(player1, 0, 1); // 아래로 이동
-        }
-        else if (e.keyCode == 65) { // A 키 (플레이어 1)
-          movePlayer(player1, -1, 0); // 왼쪽으로 이동
-        }
-        else if (e.keyCode == 68) { // D 키 (플레이어 1)
-          movePlayer(player1, 1, 0); // 오른쪽으로 이동
-        }
-        else if (e.keyCode == 38) { // 화살표 위 키 (플레이어 2)
-          movePlayer(player2, 0, -1); // 위로 이동
-        }
-        else if (e.keyCode == 40) { // 화살표 아래 키 (플레이어 2)
-          movePlayer(player2, 0, 1); // 아래로 이동
-        }
-        else if (e.keyCode == 37) { // 화살표 왼쪽 키 (플레이어 2)
-          movePlayer(player2, -1, 0); // 왼쪽으로 이동
-        }
-        else if (e.keyCode == 39) { // 화살표 오른쪽 키 (플레이어 2)
-          movePlayer(player2, 1, 0); // 오른쪽으로 이동
-        }
-        else if (e.keyCode == 32) { // 스페이스바 (플레이어 1)
-          shootBullet(player1); // 총알 발사
-        }
-        else if (e.keyCode == 13) { // 엔터 키 (플레이어 2)
-          shootBullet(player2); // 총알 발사
-        }
-      }
-    };
-
-    function createMap() {
-      var gameBoard = document.getElementById("game-board");
-      for (var row = 0; row < gridSize; row++) {
-        for (var col = 0; col < gridSize; col++) {
-          var cell = document.createElement("div");
-          cell.className = "cell";
-          cell.style.width = (100 / gridSize) + "%";
-          cell.style.height = (100 / gridSize) + "%";
-          gameBoard.appendChild(cell);
-        }
-      }
-    }
-
-    function createPlayer() {
-      var player = document.createElement("div");
-      player.className = "player";
-      player.style.top = getRandomPosition() + "px";
-      player.style.left = getRandomPosition() + "px";
-      return player;
-    }
-
-    function createObstacle() {
-      var obstacle = document.createElement("div");
-      obstacle.className = "obstacle";
-      obstacle.style.top = getRandomPosition() + "px";
-      obstacle.style.left = getRandomPosition() + "px";
-      return obstacle;
-    }
-
-    function getRandomPosition() {
-      var min = 0;
-      var max = gridSize * 50 - 50; // 맵 크기에 맞춰 최대값 계산
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function movePlayer(player, dx, dy) {
-      var currentTop = parseInt(player.style.top, 10);
-      var currentLeft = parseInt(player.style.left, 10);
-      var newTop = currentTop + dy * 50;
-      var newLeft = currentLeft + dx * 50;
-
-      if (newTop >= 0 && newTop < gridSize * 50 && newLeft >= 0 && newLeft < gridSize * 50) {
-        player.style.top = newTop + "px";
-        player.style.left = newLeft + "px";
-      }
-    }
-
-    function shootBullet(player) {
-      var bullet = document.createElement("div");
-      bullet.className = "bullet";
-      bullet.style.top = player.style.top;
-      bullet.style.left = player.style.left;
-
-      document.getElementById("game-board").appendChild(bullet);
-
-      bullets.push(bullet); // 총알을 배열에 추가
-
-      var angle = 90; // 각도 (단위: 도)
-      var radian = angle * (Math.PI / 180); // 라디안으로 변환
-      var dx = Math.sin(radian); // x 방향 이동 거리
-      var dy = -Math.cos(radian); // y 방향 이동 거리
-
-      var interval = setInterval(function () {
-        var bulletTop = parseInt(bullet.style.top, 10) + dy * bulletSpeed;
-        var bulletLeft = parseInt(bullet.style.left, 10) + dx * bulletSpeed;
-
-        bullet.style.top = bulletTop + "px";
-        bullet.style.left = bulletLeft + "px";
-
-        // 총알이 화면을 벗어나면 제거
-        if (bulletTop <= 0 || bulletTop >= gridSize * 50 || bulletLeft <= 0 || bulletLeft >= gridSize * 50) {
-          clearInterval(interval);
-          bullet.parentNode.removeChild(bullet);
-
-          // 총알 배열에서 제거
-          var index = bullets.indexOf(bullet);
-          if (index !== -1) {
-            bullets.splice(index, 1);
-          }
-
-          // 충돌 체크
-          checkCollision(player);
-        }
-      }, 10);
-    }
-
-    function checkCollision() {
-      for (var i = 0; i < obstacles.length; i++) {
-        var obstacle = obstacles[i];
-        var obstacleRect = obstacle.getBoundingClientRect();
-
-        for (var j = 0; j < bullets.length; j++) {
-          var bullet = bullets[j];
-          var bulletRect = bullet.getBoundingClientRect();
-
-          if (isColliding(obstacleRect, bulletRect)) {
-            obstacle.remove();
-            obstacles.splice(i, 1);
-            bullet.remove();
-            bullets.splice(j, 1);
-            break;
-          }
-        }
-
-        for (var k = 0; k < players.length; k++) {
-          var player = players[k];
-          var playerRect = player.getBoundingClientRect();
-
-          if (isColliding(obstacleRect, playerRect)) {
-            endGame();
-            break;
-          }
-        }
-      }
-    }
-
-    function isColliding(rect1, rect2) {
-      return rect1.left < rect2.right &&
-        rect1.right > rect2.left &&
-        rect1.top < rect2.bottom &&
-        rect1.bottom > rect2.top;
-    }
-
-    function endGame() {
-      gameOver = true;
-      var restartButton = document.getElementById("restart-button");
-      restartButton.style.display = "block";
-      restartButton.onclick = function() {
-        location.reload();
-      };
-    }
-
-    function startGame() {
-      createMap();
-      for (var i = 0; i < 2; i++) {
-        var player = createPlayer();
-        document.getElementById("game-board").appendChild(player);
-        players.push(player);
-      }
-      for (var j = 0; j < 5; j++) {
-        var obstacle = createObstacle();
-        document.getElementById("game-board").appendChild(obstacle);
-        obstacles.push(obstacle);
-      }
-
-      setInterval(function() {
-        checkCollision();
-      }, 100);
-    }
-  </script>
 </head>
-<body onload="startGame()">
-<div id="game-board"></div>
-<button id="restart-button">Restart</button>
+<body>
+<div class="container">
+    <h1>확률 게임</h1>
+    <p id="roundNumber">라운드 1에 도전합니다!</p>
+    <button id="playButton" onclick="playRound()">도전하기</button>
+    <button id="restartButton" onclick="restartGame()" style="display: none;">처음으로</button>
+    <p id="result"></p>
+</div>
+
+<script>
+    var round = 1;
+    var probabilities = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    
+    function playRound() {
+    var randomNumber = Math.random();
+    var successProbability = probabilities[round - 1];
+    
+    if (randomNumber <= successProbability) {
+        document.getElementById("result").innerHTML = "라운드 " + round + "을 통과했습니다!";
+    } else {
+        document.getElementById("result").innerHTML = "라운드 " + round + "을 통과하지 못했습니다.";
+        document.getElementById("playButton").disabled = true;
+        document.getElementById("restartButton").style.display = "inline-block";
+    }
+    
+    if (round === 10) {
+        document.getElementById("playButton").disabled = true;
+        document.getElementById("restartButton").style.display = "inline-block";
+        document.getElementById("playButton").innerHTML = "게임 종료";
+    } else {
+        round++;
+        document.getElementById("roundNumber").innerHTML = "라운드 " + round + "에 도전합니다!";
+    }
+    }
+    
+    function restartGame() {
+    round = 1;
+    document.getElementById("roundNumber").innerHTML = "라운드 1에 도전합니다!";
+    document.getElementById("playButton").disabled = false;
+    document.getElementById("playButton").innerHTML = "도전하기";
+    document.getElementById("restartButton").style.display = "none";
+    document.getElementById("result").innerHTML = "";
+    }
+</script>
 </body>
 </html>
